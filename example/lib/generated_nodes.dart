@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:infinite_canvas/infinite_canvas.dart';
 import 'package:random_color/random_color.dart';
@@ -18,55 +17,96 @@ class _GeneratedNodesState extends State<GeneratedNodes> {
   @override
   void initState() {
     super.initState();
-    // Generate random nodes
-    final colors = RandomColor();
-    final nodes = List.generate(100, (index) {
-      final color = colors.randomColor();
-      final size = Random().nextDouble() * 200 + 100;
-      return InfiniteCanvasNode(
-        key: UniqueKey(),
-        label: 'Node $index',
-        resizeMode: ResizeMode.cornersAndEdges,
-        offset: Offset(
-          Random().nextDouble() * 5000,
-          Random().nextDouble() * 5000,
+    controller = InfiniteCanvasController();
+    resetCanvas(); // Ensure that we start with one root node
+  }
+
+  // Method to create a single root node and reset the canvas
+  void resetCanvas() {
+    controller.nodes.clear();
+    controller.edges.clear();
+
+    final rootNode = createProfileTileNode(0); // Create a single root node
+    controller.add(rootNode); // Add root node to the controller
+  }
+
+  // Method to create the ProfileTile node
+  InfiniteCanvasNode createProfileTileNode(int index) {
+    return InfiniteCanvasNode(
+      key: UniqueKey(),
+      label: 'Root Node $index',
+      resizeMode: ResizeMode.cornersAndEdges,
+      offset: const Offset(100, 100), // Position for root node
+      size: const Size(300, 150), // Tile shape
+      child: GestureDetector( // GestureDetector wrapping ProfileTile
+        onTap: () {
+          // Logic to create two new nodes on tap
+          createTwoNodesWithEdges();
+        },
+        child: ProfileTile(
+          name: 'John Doe',
+          birthday: '01/01/1990',
+          interestingFact: 'Loves hiking and nature photography.',
         ),
-        size: Size.square(size),
-        child: Builder(
-          builder: (context) {
-            return CustomPaint(
-              painter: InlineCustomPainter(
-                brush: Paint()..color = color,
-                builder: (brush, canvas, rect) {
-                  // Draw circle
-                  final diameter = min(rect.width, rect.height);
-                  final radius = diameter / 2;
-                  canvas.drawCircle(rect.center, radius, brush);
-                },
-              ),
-            );
-          },
-        ),
-      );
-    });
-    // Generate random edges
-    final edges = <InfiniteCanvasEdge>[];
-    for (int i = 0; i < nodes.length; i++) {
-      final from = nodes[i];
-      final to = nodes[Random().nextInt(nodes.length)];
-      if (from != to) {
-        edges.add(InfiniteCanvasEdge(
-          from: from.key,
-          to: to.key,
-          label: 'Edge $i',
-        ));
-      }
-    }
-    controller = InfiniteCanvasController(
-        nodes: nodes,
-        edges: edges,
-        snapMovementToGrid: true,
-        snapResizeToGrid: true);
+      ),
+    );
+  }
+
+  // Logic to create two nodes with edges on tap
+  void createTwoNodesWithEdges() {
+    final rootNode = controller.nodes.first; // Assuming the first node is the root node
+
+    // Positioning new nodes further from the root node
+    final Offset rootNodeOffset = rootNode.offset;
+
+    // Create two new nodes placed far enough to avoid overlapping with root node
+    final newNode1 = InfiniteCanvasNode(
+      key: UniqueKey(),
+      label: 'New Node 1',
+      resizeMode: ResizeMode.cornersAndEdges,
+      offset: rootNodeOffset.translate(400, 0), // Far right from root node
+      size: const Size(300, 150),
+      child: ProfileTile(
+        name: 'Alice',
+        birthday: '03/12/1992',
+        interestingFact: 'Enjoys painting and sculpture.',
+      ),
+    );
+
+    final newNode2 = InfiniteCanvasNode(
+      key: UniqueKey(),
+      label: 'New Node 2',
+      resizeMode: ResizeMode.cornersAndEdges,
+      offset: rootNodeOffset.translate(-400, 0), // Far left from root node
+      size: const Size(300, 150),
+      child: ProfileTile(
+        name: 'Bob',
+        birthday: '11/05/1987',
+        interestingFact: 'Loves playing the guitar and hiking.',
+      ),
+    );
+
+    // Add new nodes to the controller
+    controller.add(newNode1);
+    controller.add(newNode2);
+
+    // Create edges connecting the root node to the new nodes
+    final edgeToNode1 = InfiniteCanvasEdge(
+      from: rootNode.key,
+      to: newNode1.key,
+      label: 'Edge to Node 1',
+    );
+
+    final edgeToNode2 = InfiniteCanvasEdge(
+      from: rootNode.key,
+      to: newNode2.key,
+      label: 'Edge to Node 2',
+    );
+
+    // Add edges to the edges list directly
+    controller.edges.addAll([edgeToNode1, edgeToNode2]);
+
+    // No need to call notifyListeners, the controller should automatically update
   }
 
   @override
@@ -75,6 +115,16 @@ class _GeneratedNodesState extends State<GeneratedNodes> {
       appBar: AppBar(
         title: const Text('Infinite Canvas Example'),
         centerTitle: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh), // Reset button
+            onPressed: () {
+              setState(() {
+                resetCanvas(); // Reset to a single root node
+              });
+            },
+          ),
+        ],
       ),
       body: InfiniteCanvas(
         drawVisibleOnly: true,
@@ -86,156 +136,9 @@ class _GeneratedNodesState extends State<GeneratedNodes> {
             label: 'Create',
             menuChildren: [
               MenuEntry(
-                label: 'Circle',
+                label: 'Profile Tile',
                 onPressed: () {
-                  final color = RandomColor().randomColor();
-                  final node = InfiniteCanvasNode(
-                    key: UniqueKey(),
-                    label: 'Node ${controller.nodes.length}',
-                    resizeMode: ResizeMode.cornersAndEdges,
-                    offset: controller.mousePosition,
-                    size: Size(
-                      Random().nextDouble() * 200 + 100,
-                      Random().nextDouble() * 200 + 100,
-                    ),
-                    child: Builder(
-                      builder: (context) {
-                        return CustomPaint(
-                          painter: InlineCustomPainter(
-                            brush: Paint()..color = color,
-                            builder: (brush, canvas, rect) {
-                              // Draw circle
-                              final diameter = min(rect.width, rect.height);
-                              final radius = diameter / 2;
-                              canvas.drawCircle(rect.center, radius, brush);
-                            },
-                          ),
-                        );
-                      },
-                    ),
-                  );
-                  controller.add(node);
-                },
-              ),
-              MenuEntry(
-                label: 'Triangle',
-                onPressed: () {
-                  final color = RandomColor().randomColor();
-                  final node = InfiniteCanvasNode(
-                    key: UniqueKey(),
-                    label: 'Node ${controller.nodes.length}',
-                    resizeMode: ResizeMode.cornersAndEdges,
-                    offset: controller.mousePosition,
-                    size: Size(
-                      Random().nextDouble() * 200 + 100,
-                      Random().nextDouble() * 200 + 100,
-                    ),
-                    child: Builder(
-                      builder: (context) {
-                        return CustomPaint(
-                          painter: InlineCustomPainter(
-                            brush: Paint()..color = color,
-                            builder: (brush, canvas, rect) {
-                              // Draw triangle
-                              final path = Path()
-                                ..moveTo(rect.left, rect.bottom)
-                                ..lineTo(rect.right, rect.bottom)
-                                ..lineTo(rect.center.dx, rect.top)
-                                ..close();
-                              canvas.drawPath(path, brush);
-                            },
-                          ),
-                        );
-                      },
-                    ),
-                  );
-                  controller.add(node);
-                },
-              ),
-              MenuEntry(
-                label: 'Rectangle',
-                onPressed: () {
-                  final color = RandomColor().randomColor();
-                  final node = InfiniteCanvasNode(
-                    key: UniqueKey(),
-                    label: 'Node ${controller.nodes.length}',
-                    resizeMode: ResizeMode.cornersAndEdges,
-                    offset: controller.mousePosition,
-                    size: Size(
-                      Random().nextDouble() * 200 + 100,
-                      Random().nextDouble() * 200 + 100,
-                    ),
-                    child: Builder(
-                      builder: (context) {
-                        return CustomPaint(
-                          painter: InlineCustomPainter(
-                            brush: Paint()..color = color,
-                            builder: (brush, canvas, rect) {
-                              // Draw rectangle
-                              canvas.drawRect(rect, brush);
-                            },
-                          ),
-                        );
-                      },
-                    ),
-                  );
-                  controller.add(node);
-                },
-              ),
-            ],
-          ),
-          MenuEntry(
-            label: 'Info',
-            menuChildren: [
-              MenuEntry(
-                label: 'Cycle',
-                onPressed: () {
-                  final fd = controller.getDirectedGraph();
-                  final messenger = ScaffoldMessenger.of(context);
-                  final result = fd.cycle;
-                  messenger.showSnackBar(
-                    SnackBar(
-                      content: Text(
-                          'Cycle found: ${result.map((e) => e.key.toString()).join(', ')}'),
-                    ),
-                  );
-                },
-              ),
-              MenuEntry(
-                label: 'In Degree',
-                onPressed: () {
-                  final fd = controller.getDirectedGraph();
-                  final result = fd.inDegreeMap;
-                  // Show dismissible dialog
-                  showDialog(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        title: const Text('In Degree'),
-                        content: SingleChildScrollView(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              for (final entry in result.entries.toList()
-                                ..sort(
-                                  (a, b) => b.value.compareTo(a.value),
-                                ))
-                                Text(
-                                  '${entry.key.id}: ${entry.value}',
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                            ],
-                          ),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: const Text('Close'),
-                          ),
-                        ],
-                      );
-                    },
-                  );
+                  controller.add(createProfileTileNode(controller.nodes.length));
                 },
               ),
             ],
@@ -246,27 +149,64 @@ class _GeneratedNodesState extends State<GeneratedNodes> {
   }
 }
 
-class InlineCustomPainter extends CustomPainter {
-  const InlineCustomPainter({
-    required this.brush,
-    required this.builder,
-    this.isAntiAlias = true,
-  });
-  final Paint brush;
-  final bool isAntiAlias;
-  final void Function(Paint paint, Canvas canvas, Rect rect) builder;
+class ProfileTile extends StatelessWidget {
+  final String name;
+  final String birthday;
+  final String interestingFact;
+
+  const ProfileTile({
+    Key? key,
+    required this.name,
+    required this.birthday,
+    required this.interestingFact,
+  }) : super(key: key);
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    brush.isAntiAlias = isAntiAlias;
-    canvas.save();
-    builder(brush, canvas, rect);
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return true;
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade100, // Background color of the tile
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.5),
+            spreadRadius: 2,
+            blurRadius: 7,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Modify the color of the name text here
+          Text(
+            name,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black, // Set text color to black (or any other color)
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Modify the color of the birthday text here
+          Text(
+            'Birthday: $birthday',
+            style: const TextStyle(
+              color: Colors.black, // Set text color to black (or any other color)
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Modify the color of the interesting fact text here
+          Text(
+            'Interesting Fact: $interestingFact',
+            style: const TextStyle(
+              color: Colors.black, // Set text color to black (or any other color)
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

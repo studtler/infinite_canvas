@@ -1,3 +1,10 @@
+0.0.21
+Added functionality to create two child nodes when the root node is tapped.
+Child nodes are placed further away from the root node to avoid overlap.
+Nodes are connected to the root node with edges.
+Added a reset button to clear the canvas and leave only the root node.
+Updated text color inside ProfileTile to black for better readability.
+
 ## 0.0.10
 
 - Added DragHandlers for edges to resize a node in only one dimension @schaetz
