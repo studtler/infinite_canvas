@@ -33,7 +33,7 @@ class _WebViewsState extends State<WebViews> {
           Builder(builder: (context) {
             final colors = Theme.of(context).colorScheme;
             return Container(
-              color: colors.surfaceVariant,
+              color: colors.surfaceContainerHighest,
               child: Row(
                 children: [
                   const Spacer(),
@@ -54,7 +54,7 @@ class _WebViewsState extends State<WebViews> {
             ),
           ),
         ],
-      ),
+      ), metadata: {},
     );
   }
 

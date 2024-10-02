@@ -22,7 +22,7 @@ class GridBackgroundBuilder extends StatelessWidget {
 
     final colors = Theme.of(context).colorScheme;
     return Material(
-      color: colors.background,
+      color: colors.surface,
       child: Stack(
         clipBehavior: Clip.none,
         children: <Widget>[
@@ -36,7 +36,7 @@ class GridBackgroundBuilder extends StatelessWidget {
                   width: cellWidth,
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: colors.onBackground.withOpacity(0.1),
+                      color: colors.onSurface.withOpacity(0.1),
                       width: 1,
                     ),
                   ),

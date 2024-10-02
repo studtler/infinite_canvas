@@ -1,9 +1,17 @@
+
+0.0.22 (Unreleased)
+Refactored tap detection logic to ensure that the root node can trigger the creation of child nodes even after being moved.
+Implemented canvas-level tap detection for nodes, removing reliance on static GestureDetector within nodes.
+Fixed issue where child nodes would overlap by dynamically placing them at random but controlled distances from the root node.
+Added null safety checks when determining if a root node was tapped, preventing errors when no node is tapped.
+
 0.0.21
 Added functionality to create two child nodes when the root node is tapped.
 Child nodes are placed further away from the root node to avoid overlap.
 Nodes are connected to the root node with edges.
 Added a reset button to clear the canvas and leave only the root node.
 Updated text color inside ProfileTile to black for better readability.
+
 
 ## 0.0.10
 

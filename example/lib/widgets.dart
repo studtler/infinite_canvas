@@ -20,14 +20,14 @@ class _WidgetsState extends State<Widgets> {
         size: const Size(500, 800),
         offset: Offset.zero,
         child: const CounterExample(),
-        label: 'Counter Example',
+        label: 'Counter Example', metadata: {},
       ),
       InfiniteCanvasNode(
         key: UniqueKey(),
         size: const Size(500, 800),
         offset: const Offset(550, 200),
         child: const DraggableExample(),
-        label: 'Draggable Example',
+        label: 'Draggable Example', metadata: {},
       ),
     ]);
   }

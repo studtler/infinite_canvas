@@ -72,7 +72,7 @@ class _LevelOfDetailState extends State<LevelOfDetail> {
             );
           },
         ),
-      ),
+      ), metadata: {},
     ));
   }
 
