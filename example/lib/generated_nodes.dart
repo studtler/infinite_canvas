@@ -14,6 +14,10 @@ class _GeneratedNodesState extends State<GeneratedNodes> {
   late InfiniteCanvasController controller;
   final gridSize = const Size.square(50);
 
+  // Node counter to track the total number of created nodes
+  int nodeCounter = 1; // Starting from 1, assuming Root Node is node 0
+  Random random = Random(); // Random instance to help position nodes dynamically
+
   @override
   void initState() {
     super.initState();
@@ -25,65 +29,57 @@ class _GeneratedNodesState extends State<GeneratedNodes> {
   void resetCanvas() {
     controller.nodes.clear();
     controller.edges.clear();
+    nodeCounter = 1; // Reset the node counter on canvas reset
 
-    final rootNode = createProfileTileNode(0); // Create a single root node
+    final rootNode = createProfileTileNode(0, const Offset(100, 100)); // Create a single root node
     controller.add(rootNode); // Add root node to the controller
   }
 
   // Method to create the ProfileTile node
-  InfiniteCanvasNode createProfileTileNode(int index) {
+  InfiniteCanvasNode createProfileTileNode(int index, Offset position) {
     return InfiniteCanvasNode(
       key: UniqueKey(),
       label: 'Root Node $index',
       resizeMode: ResizeMode.cornersAndEdges,
-      offset: const Offset(100, 100), // Position for root node
+      offset: position, // Position for root node
       size: const Size(300, 150), // Tile shape
-      child: GestureDetector( // GestureDetector wrapping ProfileTile
-        onTap: () {
-          // Logic to create two new nodes on tap
-          createTwoNodesWithEdges();
-        },
-        child: ProfileTile(
-          name: 'John Doe',
-          birthday: '01/01/1990',
-          interestingFact: 'Loves hiking and nature photography.',
-        ),
-      ),
+      child: ProfileTile(
+        name: 'John Doe',
+        birthday: '01/01/1990',
+        interestingFact: 'Loves hiking and nature photography.',
+      ), metadata: {},
     );
   }
 
   // Logic to create two nodes with edges on tap
-  void createTwoNodesWithEdges() {
-    final rootNode = controller.nodes.first; // Assuming the first node is the root node
-
-    // Positioning new nodes further from the root node
-    final Offset rootNodeOffset = rootNode.offset;
+  void createTwoNodesWithEdges(InfiniteCanvasNode rootNode) {
+    final Offset rootNodeOffset = rootNode.offset; // Get the dynamic position of the root node
 
     // Create two new nodes placed far enough to avoid overlapping with root node
     final newNode1 = InfiniteCanvasNode(
       key: UniqueKey(),
-      label: 'New Node 1',
+      label: 'New Node ${nodeCounter++}', // Increment nodeCounter
       resizeMode: ResizeMode.cornersAndEdges,
-      offset: rootNodeOffset.translate(400, 0), // Far right from root node
+      offset: getRandomOffset(rootNodeOffset, 400), // Get a random, non-overlapping position for new node
       size: const Size(300, 150),
       child: ProfileTile(
         name: 'Alice',
         birthday: '03/12/1992',
         interestingFact: 'Enjoys painting and sculpture.',
-      ),
+      ), metadata: {},
     );
 
     final newNode2 = InfiniteCanvasNode(
       key: UniqueKey(),
-      label: 'New Node 2',
+      label: 'New Node ${nodeCounter++}', // Increment nodeCounter
       resizeMode: ResizeMode.cornersAndEdges,
-      offset: rootNodeOffset.translate(-400, 0), // Far left from root node
+      offset: getRandomOffset(rootNodeOffset, -400), // Get a random, non-overlapping position for second new node
       size: const Size(300, 150),
       child: ProfileTile(
         name: 'Bob',
         birthday: '11/05/1987',
         interestingFact: 'Loves playing the guitar and hiking.',
-      ),
+      ), metadata: {},
     );
 
     // Add new nodes to the controller
@@ -105,8 +101,15 @@ class _GeneratedNodesState extends State<GeneratedNodes> {
 
     // Add edges to the edges list directly
     controller.edges.addAll([edgeToNode1, edgeToNode2]);
+  }
 
-    // No need to call notifyListeners, the controller should automatically update
+  // Generate random offset ensuring no overlap between nodes
+  Offset getRandomOffset(Offset rootOffset, double distance) {
+    // Generate random values to spread nodes around the root node
+    double dx = rootOffset.dx + distance + random.nextInt(200) - 100;
+    double dy = rootOffset.dy + random.nextInt(200) - 100;
+
+    return Offset(dx, dy); // Return new offset ensuring random placement
   }
 
   @override
@@ -126,26 +129,58 @@ class _GeneratedNodesState extends State<GeneratedNodes> {
           ),
         ],
       ),
-      body: InfiniteCanvas(
-        drawVisibleOnly: true,
-        canAddEdges: true,
-        controller: controller,
-        gridSize: gridSize,
-        menus: [
-          MenuEntry(
-            label: 'Create',
-            menuChildren: [
-              MenuEntry(
-                label: 'Profile Tile',
-                onPressed: () {
-                  controller.add(createProfileTileNode(controller.nodes.length));
-                },
-              ),
-            ],
-          ),
-        ],
+      body: GestureDetector(
+        onTapUp: (details) {
+          // Detect tap position and check if any node was tapped
+          final tappedNode = findTappedNode(details.localPosition);
+
+          // Check if tappedNode is not null before accessing its properties
+          if (tappedNode != null && tappedNode.label != null && tappedNode.label!.contains('Root Node')) {
+            // If the tapped node is the root node, create two child nodes
+            createTwoNodesWithEdges(tappedNode);
+          }
+        },
+        child: InfiniteCanvas(
+          drawVisibleOnly: true,
+          canAddEdges: true,
+          controller: controller,
+          gridSize: gridSize,
+          menus: [
+            MenuEntry(
+              label: 'Create',
+              menuChildren: [
+                MenuEntry(
+                  label: 'Profile Tile',
+                  onPressed: () {
+                    controller.add(createProfileTileNode(controller.nodes.length, Offset(100, 100)));
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  // Helper function to find the tapped node
+  InfiniteCanvasNode? findTappedNode(Offset tapPosition) {
+    try {
+      return controller.nodes.firstWhere((node) => isNodeTapped(node, tapPosition));
+    } catch (e) {
+      return null; // Return null if no node is found
+    }
+  }
+
+  // Helper function to check if a node was tapped
+  bool isNodeTapped(InfiniteCanvasNode node, Offset tapPosition) {
+    final nodeRect = Rect.fromLTWH(
+      node.offset.dx,
+      node.offset.dy,
+      node.size.width,
+      node.size.height,
+    );
+    return nodeRect.contains(tapPosition);
   }
 }
 
@@ -180,29 +215,26 @@ class ProfileTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Modify the color of the name text here
           Text(
             name,
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.black, // Set text color to black (or any other color)
+              color: Colors.black,
             ),
           ),
           const SizedBox(height: 8),
-          // Modify the color of the birthday text here
           Text(
             'Birthday: $birthday',
             style: const TextStyle(
-              color: Colors.black, // Set text color to black (or any other color)
+              color: Colors.black,
             ),
           ),
           const SizedBox(height: 8),
-          // Modify the color of the interesting fact text here
           Text(
             'Interesting Fact: $interestingFact',
             style: const TextStyle(
-              color: Colors.black, // Set text color to black (or any other color)
+              color: Colors.black,
             ),
           ),
         ],

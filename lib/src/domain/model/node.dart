@@ -12,7 +12,7 @@ class InfiniteCanvasNode<T> {
     this.resizeMode = ResizeMode.disabled,
     this.allowMove = true,
     this.clipBehavior = Clip.none,
-    this.value,
+    this.value, required Map<String, bool> metadata,
   });
 
   String get id => key.toString();
